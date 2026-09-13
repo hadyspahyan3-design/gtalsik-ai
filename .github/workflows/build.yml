@@ -11,6 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -21,12 +27,9 @@ jobs:
           sudo apt update
           sudo apt install -y \
             build-essential ccache git libffi-dev libssl-dev \
-            python3-pip zip openjdk-17-jdk autoconf libtool \
+            python3-pip zip autoconf libtool \
             libtool-bin automake pkg-config zlib1g-dev \
             libncurses5-dev libncursesw5-dev cmake
-
-          echo "=== Searching for aidl ==="
-          sudo find / -name "aidl" -type f 2>/dev/null | head -5 || true
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -34,7 +37,6 @@ jobs:
       - name: Install Android build tools
         run: |
           sdkmanager "build-tools;33.0.2" "platforms;android-33"
-          ls -la $ANDROID_HOME/build-tools/33.0.2/ | grep aidl || true
           echo "$ANDROID_HOME/build-tools/33.0.2" >> $GITHUB_PATH
 
       - name: Install Buildozer
