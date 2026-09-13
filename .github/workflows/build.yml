@@ -27,9 +27,9 @@ jobs:
           sudo apt update
           sudo apt install -y \
             build-essential ccache git libffi-dev libssl-dev \
-            python3-pip zip autoconf libtool \
-            libtool-bin automake pkg-config zlib1g-dev \
-            libncurses5-dev libncursesw5-dev cmake
+            python3-pip zip autoconf libtool libtool-bin \
+            automake pkg-config zlib1g-dev libncurses5-dev \
+            libncursesw5-dev cmake aidl
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -37,6 +37,8 @@ jobs:
       - name: Install Android build tools
         run: |
           sdkmanager "build-tools;33.0.2" "platforms;android-33"
+          echo "=== Checking aidl location ==="
+          ls -la $ANDROID_HOME/build-tools/33.0.2/ | grep aidl || true
           echo "$ANDROID_HOME/build-tools/33.0.2" >> $GITHUB_PATH
 
       - name: Install Buildozer
@@ -44,9 +46,16 @@ jobs:
           pip install --user buildozer cython
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
+      - name: Fix Buildozer SDK config
+        run: |
+          mkdir -p ~/.buildozer/android/platform
+          ln -sfn $ANDROID_HOME ~/.buildozer/android/platform/android-sdk || true
+
       - name: Build with Buildozer
         run: |
-          export PATH=$PATH:$ANDROID_HOME/build-tools/33.0.2
+          export PATH=$PATH:$ANDROID_HOME/build-tools/33.0.2:$ANDROID_HOME/cmdline-tools/latest/bin
+          export ANDROID_HOME=$ANDROID_HOME
+          export ANDROID_SDK_ROOT=$ANDROID_HOME
           buildozer android debug
         env:
           BUILDOZER_WARN_ON_ROOT: 1
