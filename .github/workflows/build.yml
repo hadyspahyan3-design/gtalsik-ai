@@ -34,28 +34,28 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android build tools
+      - name: Install build tools
         run: |
-          sdkmanager "build-tools;33.0.2" "platforms;android-33"
-          echo "=== Checking aidl location ==="
-          ls -la $ANDROID_HOME/build-tools/33.0.2/ | grep aidl || true
-          echo "$ANDROID_HOME/build-tools/33.0.2" >> $GITHUB_PATH
+          sdkmanager "build-tools;33.0.2" "platforms;android-33" "platform-tools"
+
+      - name: Fix sdkmanager path for buildozer
+        run: |
+          sudo mkdir -p /usr/local/lib/android/sdk/tools/bin
+          sudo ln -sf /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager || \
+          sudo ln -sf /usr/local/lib/android/sdk/cmdline-tools/16.0/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
+          sudo chmod +x /usr/local/lib/android/sdk/tools/bin/sdkmanager
+          ls -la /usr/local/lib/android/sdk/tools/bin/
 
       - name: Install Buildozer
         run: |
           pip install --user buildozer cython
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Fix Buildozer SDK config
-        run: |
-          mkdir -p ~/.buildozer/android/platform
-          ln -sfn $ANDROID_HOME ~/.buildozer/android/platform/android-sdk || true
-
       - name: Build with Buildozer
         run: |
-          export PATH=$PATH:$ANDROID_HOME/build-tools/33.0.2:$ANDROID_HOME/cmdline-tools/latest/bin
-          export ANDROID_HOME=$ANDROID_HOME
-          export ANDROID_SDK_ROOT=$ANDROID_HOME
+          export PATH=$PATH:$ANDROID_HOME/build-tools/33.0.2:$ANDROID_HOME/platform-tools
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
           buildozer android debug
         env:
           BUILDOZER_WARN_ON_ROOT: 1
